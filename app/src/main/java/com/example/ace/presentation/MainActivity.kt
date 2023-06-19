@@ -9,61 +9,68 @@ package com.example.ace.presentation
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.wear.compose.material.MaterialTheme
+import androidx.navigation.NavHost
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import androidx.wear.compose.material.Text
-import com.example.ace.R
+import androidx.wear.compose.navigation.SwipeDismissableNavHost
+import androidx.wear.compose.navigation.composable
+import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import com.example.ace.presentation.theme.AceTheme
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            WearApp("Android")
+            WearApp()
+////            AceTheme {
+////                WearApp()
+////            GameScoreScreen(totalGames = 7)
+//            GameNumSelectionScreen()
+////            }
         }
     }
 }
 
 @Composable
-fun WearApp(greetingName: String) {
+fun WearApp() {
     AceTheme {
-        /* If you have enough items in your list, use [ScalingLazyColumn] which is an optimized
-         * version of LazyColumn for wear devices with some added features. For more information,
-         * see d.android.com/wear/compose.
-         */
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colors.background),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Greeting(greetingName = greetingName)
+        // Create a NavController
+        val navController = rememberSwipeDismissableNavController()
+
+        // Create a SwipeDismissableNavHost with a NavGraphbuilder lambda
+        SwipeDismissableNavHost(navController = navController, startDestination = "GameNumSelectionScreen") {
+            // Add a composable destination
+            composable("GameNumSelectionScreen") {
+                GameNumSelectionScreen(navController = navController)
+            }
+
+            // Add a composable destination
+            composable("GameScoreScreen/{totalGames}",
+                arguments = listOf(navArgument("totalGames") {
+                    type = NavType.IntType
+                })) {
+                // Get the argument value from the back stack entry
+                val totalGames = it.arguments?.getInt("totalGames") ?: 1
+                GameScoreScreen(navController = navController, totalGames = totalGames)
+            }
+
         }
+
     }
 }
-
+@Preview(device = Devices.WEAR_OS_LARGE_ROUND, showSystemUi = true)
 @Composable
-fun Greeting(greetingName: String) {
-    Text(
-        modifier = Modifier.fillMaxWidth(),
-        textAlign = TextAlign.Center,
-        color = MaterialTheme.colors.primary,
-        text = stringResource(R.string.hello_world, greetingName)
-    )
-}
-
-@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
-@Composable
-fun DefaultPreview() {
-    WearApp("Preview Android")
+fun WearAppPreview() {
+    WearApp()
 }
