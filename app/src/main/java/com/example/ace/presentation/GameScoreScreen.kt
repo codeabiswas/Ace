@@ -3,12 +3,15 @@ package com.example.ace.presentation
 import android.util.Log
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Arrangement.Absolute.Center
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -29,8 +32,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.wear.compose.foundation.CurvedTextStyle
 import androidx.wear.compose.material.Button
+import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.PositionIndicator
 import androidx.wear.compose.material.Scaffold
@@ -42,9 +47,10 @@ import androidx.wear.compose.material.Vignette
 import androidx.wear.compose.material.VignettePosition
 import androidx.wear.compose.material.curvedText
 import androidx.wear.compose.material.rememberScalingLazyListState
+import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalComposeUiApi::class)
+//@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun GameScoreScreen (navController: NavController, totalGames: Int) {
     val leadingTextStyle = TimeTextDefaults.timeTextStyle(color = MaterialTheme.colors.primary)
@@ -70,13 +76,17 @@ fun GameScoreScreen (navController: NavController, totalGames: Int) {
         mutableStateOf("00")
     }
 
-    var p1GameWinString by remember {
-        mutableStateOf("P1 won game(s) ")
+    // P1 string will update to show the games won
+    var p1String by remember {
+        mutableStateOf("P1")
     }
 
-    var p2GameWinString by remember {
-        mutableStateOf("P2 won game(s) ")
+    // P2 string will update to show the games won
+    var p2String by remember {
+        mutableStateOf("P2")
     }
+
+    var winState: Int
 
     // Use Scaffold to get a curved text time at the top, a vignette, and a scrolling indicator
     Scaffold(
@@ -112,9 +122,9 @@ fun GameScoreScreen (navController: NavController, totalGames: Int) {
             modifier = Modifier
                 .fillMaxSize()
                 .onRotaryScrollEvent {
-                                     coroutingScope.launch {
-                                         listState.scrollBy(it.verticalScrollPixels)
-                                     }
+                    coroutingScope.launch {
+                        listState.scrollBy(it.verticalScrollPixels)
+                    }
                     true
                 }
                 .focusRequester(focusRequester)
@@ -124,11 +134,13 @@ fun GameScoreScreen (navController: NavController, totalGames: Int) {
             state = listState
         ) {
 
+
             item {
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
-                    text = "P1"
+                    text = p1String,
+                    style = MaterialTheme.typography.title3
                 )
             }
 
@@ -140,7 +152,8 @@ fun GameScoreScreen (navController: NavController, totalGames: Int) {
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
-                    text = "P2"
+                    text = p2String,
+                    style = MaterialTheme.typography.title3
                 )
             }
 
@@ -149,68 +162,76 @@ fun GameScoreScreen (navController: NavController, totalGames: Int) {
             }
 
             item {
-                Text(p1GameWinString)
-            }
+                Row() {
 
-            item {
-                Text(p2GameWinString)
-            }
-
-            item {
-                // Button to proceed to next game
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                        Log.i("Curr game scores: ", "P1: ${p1Score.value} | P2: ${p2Score.value}")
-                        if (currGame <= totalGames) {
-
-                            if (p1Score.value > p2Score.value) {
-                                p1GameWinString += if (p1GameWinString == "P1 won game(s) ") {
-                                    "$currGame"
+                    // Do not show the stop button if you are already at last game
+                    if (currGame != totalGames) {
+                        StopButton(
+                            onClick = {
+                                winState = if (p1String.length == p2String.length) {
+                                    0
+                                } else if (p1String.length > p2String.length) {
+                                    1
+                                } else if (p1String.length < p2String.length) {
+                                    2
                                 } else {
-                                    ", $currGame"
+                                    3
                                 }
-                            } else {
-                                p2GameWinString += if (p2GameWinString == "P2 won game(s) ") {
-                                    "$currGame"
-                                } else {
-                                    ", $currGame"
-                                }
-                            }
 
-                            currGame++
-
-                            // Reset the game to track the new game
-                            p1Score.value = 0
-                            p2Score.value = 0
-                            p1GameScoreString.value = "00"
-                            p2GameScoreString.value = "00"
-
-                        }
-                    },
-                    enabled = ((currGame < totalGames) && (p1Score.value != p2Score.value))
-                ) {
-                    Text("Next game")
-                }
-            }
-
-            item {
-                // Button to quit games
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                        if (p1Score.value > p2Score.value) {
-                            p1GameWinString += "$currGame"
-                        } else {
-                            p2GameWinString += "$currGame"
-                        }
-                        navController.navigate("GameNumSelectionScreen")
+                                navController.navigate("GameCompleteScreen/$winState")
+                            })
                     }
-                ) {
-                    Text("Quit")
+
+                    NextButton(
+                        onClick = {
+                            Log.i("Curr game scores: ", "P1: ${p1Score.value} | P2: ${p2Score.value}")
+
+                            if (currGame <= totalGames) {
+
+                                if (p1Score.value > p2Score.value) {
+                                    p1String += if (p1String == "P1") {
+                                        " | $currGame"
+                                    } else {
+                                        ", $currGame"
+                                    }
+                                } else {
+                                    p2String += if (p2String == "P2") {
+                                        " | $currGame"
+                                    } else {
+                                        ", $currGame"
+                                    }
+                                }
+
+
+                                // Reset the game to track the new game
+                                p1Score.value = 0
+                                p2Score.value = 0
+                                p1GameScoreString.value = "00"
+                                p2GameScoreString.value = "00"
+
+                                if (currGame == totalGames) {
+
+                                    winState = if (p1String.length == p2String.length) {
+                                        0
+                                    } else if (p1String.length > p2String.length) {
+                                        1
+                                    } else if (p1String.length < p2String.length) {
+                                        2
+                                    } else {
+                                        3
+                                    }
+
+                                    navController.navigate("GameCompleteScreen/$winState")
+                                }
+
+                                currGame++
+                            }
+                        },
+                        enabled = p1Score.value != p2Score.value
+                    )
+
                 }
             }
-
         }
 
         LaunchedEffect(Unit) { focusRequester.requestFocus() }
@@ -227,33 +248,28 @@ fun ScoreRow(score: MutableState<Int>, scoreString: MutableState<String>) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        // A button to decrease the score
-        Button(
-            modifier = Modifier.align(Alignment.CenterVertically),
+
+        SubtractButton(
             onClick = {
-            score.value--
-            scoreString.value = computeScore(score.value)
-        },
-        enabled = score.value > 0) {
-            Text("-")
-        }
-        // A text box to show the score
+                score.value--
+                scoreString.value = computeScore(score.value)
+            },
+            enabled = score.value > 0
+        )
+
         Text(
             modifier = Modifier.align(Alignment.CenterVertically),
             text = scoreString.value,
-            style = MaterialTheme.typography.body1,
-            fontSize = 35.sp
+            style = MaterialTheme.typography.display3,
         )
-        // A button to increase the score
-        Button(
-            modifier = Modifier.align(Alignment.CenterVertically),
+
+        AddButton(
             onClick = {
-            score.value++
-            scoreString.value = computeScore(score.value)
-        },
-        enabled = score.value < 5) {
-            Text("+")
-        }
+                score.value++
+                scoreString.value = computeScore(score.value)
+            },
+            enabled = score.value < 5
+        )
 
     }
 }
@@ -275,8 +291,8 @@ fun computeScore(score: Int): String {
 
 }
 
-//@Preview(device = Devices.WEAR_OS_LARGE_ROUND, showSystemUi = true)
-//@Composable
-//fun GameScoreScreenPreview() {
-//    GameScoreScreen(totalGames = 7)
-//}
+@Preview(device = Devices.WEAR_OS_LARGE_ROUND, showSystemUi = true)
+@Composable
+fun GameScoreScreenPreview() {
+    GameScoreScreen(navController = rememberSwipeDismissableNavController(), totalGames = 7)
+}

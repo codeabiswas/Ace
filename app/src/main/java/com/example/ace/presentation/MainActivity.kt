@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHost
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -30,14 +31,12 @@ import com.example.ace.presentation.theme.AceTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Handle the splash screen transition
+        installSplashScreen()
+
         super.onCreate(savedInstanceState)
         setContent {
             WearApp()
-////            AceTheme {
-////                WearApp()
-////            GameScoreScreen(totalGames = 7)
-//            GameNumSelectionScreen()
-////            }
         }
     }
 }
@@ -50,6 +49,11 @@ fun WearApp() {
 
         // Create a SwipeDismissableNavHost with a NavGraphbuilder lambda
         SwipeDismissableNavHost(navController = navController, startDestination = "GameNumSelectionScreen") {
+            // Add a composable destination
+            composable("PlayerNumSelectionScreen") {
+                PlayerNumSelectionScreen(navController = navController)
+            }
+
             // Add a composable destination
             composable("GameNumSelectionScreen") {
                 GameNumSelectionScreen(navController = navController)
@@ -64,6 +68,17 @@ fun WearApp() {
                 val totalGames = it.arguments?.getInt("totalGames") ?: 1
                 GameScoreScreen(navController = navController, totalGames = totalGames)
             }
+
+            // Add a composable destination
+            composable("GameCompleteScreen/{winState}",
+                arguments = listOf(navArgument("winState") {
+                    type = NavType.IntType
+                })) {
+                // Get the argument value from the back stack entry
+                val winState = it.arguments?.getInt("winState") ?: 3
+                GameCompleteScreen(navController = navController, winState = winState)
+            }
+
 
         }
 

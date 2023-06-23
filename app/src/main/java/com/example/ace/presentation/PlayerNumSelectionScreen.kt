@@ -12,13 +12,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import androidx.wear.compose.material.Button
+import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.Text
+import androidx.wear.compose.material.TimeText
+import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import com.example.ace.presentation.theme.AceTheme
 
 @Composable
-fun PlayerNumSelectionScreen() {
-    AceTheme {
+fun PlayerNumSelectionScreen(navController: NavController) {
+    Scaffold(
+        timeText = { TimeText() }
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize(),
@@ -31,8 +37,9 @@ fun PlayerNumSelectionScreen() {
                 onClick = { /*TODO*/ }) {
                 Text("Singles")
             }
+
             Spacer(modifier = Modifier
-                                .height(4.dp))
+                                .height(8.dp))
             Button(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -45,5 +52,5 @@ fun PlayerNumSelectionScreen() {
 @Preview(device = Devices.WEAR_OS_LARGE_ROUND, showSystemUi = true)
 @Composable
 fun PlayerNumSelectionScreenPreview() {
-    PlayerNumSelectionScreen()
+    PlayerNumSelectionScreen(navController = rememberSwipeDismissableNavController())
 }
