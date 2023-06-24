@@ -91,15 +91,8 @@ fun GameCompleteScreen (navController: NavController, winState: Int) {
             Box(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                AceChip(
+                NewGameChip(
                     modifier = Modifier.align(Alignment.Center),
-                    label = "New match",
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Outlined.SportsTennis,
-                            contentDescription = "New match"
-                        )
-                    },
                     onClick = {
                         navController.navigate("GameNumSelectionScreen")
                     }

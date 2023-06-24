@@ -16,6 +16,9 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material.icons.outlined.Stop
+import androidx.compose.material.icons.rounded.ArrowForward
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.SportsTennis
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -39,6 +42,8 @@ import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipColors
 import androidx.wear.compose.material.ChipDefaults
+import androidx.wear.compose.material.CompactButton
+import androidx.wear.compose.material.CompactChip
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.OutlinedButton
@@ -59,6 +64,7 @@ fun AceButton(
     onClick: () -> Unit,
     colors: ButtonColors = ButtonDefaults.primaryButtonColors(),
     enabled: Boolean = true) {
+//    CompactButton(
     Button(
         modifier = modifier,
         onClick  = onClick,
@@ -77,7 +83,7 @@ fun AceChip(
     colors: ChipColors = ChipDefaults.primaryChipColors(),
     enabled: Boolean = true
 ) {
-   Chip(
+   CompactChip(
        modifier = modifier,
        label = {
            Text(text = label)
@@ -88,6 +94,69 @@ fun AceChip(
        enabled = enabled
    )
 
+}
+
+@Composable
+fun QuitChip(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    AceChip(
+        modifier = modifier,
+        label = "Quit",
+        onClick = onClick,
+        colors = ChipDefaults.secondaryChipColors(),
+        icon = {
+            Icon(
+                imageVector = Icons.Rounded.Close,
+                contentDescription = "Quit"
+            )
+        },
+        enabled = enabled
+    )
+}
+
+@Composable
+fun NextChip(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    enabled: Boolean = true
+) {
+    AceChip(
+        modifier = modifier,
+        label = "Next",
+        onClick = onClick,
+        colors = ChipDefaults.primaryChipColors(),
+        icon = {
+            Icon(
+                imageVector = Icons.Rounded.ArrowForward,
+                contentDescription = "Next"
+            )
+        },
+        enabled = enabled
+    )
+}
+
+@Composable
+fun NewGameChip(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    enabled: Boolean = true
+) {
+    AceChip(
+        modifier = modifier,
+        label = "New game",
+        onClick = onClick,
+        colors = ChipDefaults.primaryChipColors(),
+        icon = {
+            Icon(
+                imageVector = Icons.Rounded.SportsTennis,
+                contentDescription = "New game"
+            )
+        },
+        enabled = enabled
+    )
 }
 
 @Composable
