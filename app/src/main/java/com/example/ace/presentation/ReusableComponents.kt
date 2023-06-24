@@ -4,7 +4,9 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
@@ -27,14 +29,19 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.rotary.onRotaryScrollEvent
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonColors
 import androidx.wear.compose.material.ButtonDefaults
+import androidx.wear.compose.material.Chip
+import androidx.wear.compose.material.ChipColors
+import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
+import androidx.wear.compose.material.OutlinedButton
 import androidx.wear.compose.material.Picker
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.rememberPickerState
@@ -42,7 +49,7 @@ import com.example.ace.R
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
-val addSubButtonModifier = Modifier.size(ButtonDefaults.ExtraSmallButtonSize)
+val addSubButtonModifier = Modifier.size(ButtonDefaults.DefaultButtonSize)
 val defaultButtonModifier = Modifier.size(ButtonDefaults.SmallButtonSize)
 
 @Composable
@@ -62,6 +69,75 @@ fun AceButton(
 }
 
 @Composable
+fun AceChip(
+    modifier: Modifier = Modifier,
+    label: String,
+    icon: (@Composable BoxScope.() -> Unit)? = null,
+    onClick: () -> Unit,
+    colors: ChipColors = ChipDefaults.primaryChipColors(),
+    enabled: Boolean = true
+) {
+   Chip(
+       modifier = modifier,
+       label = {
+           Text(text = label)
+       },
+       icon = icon,
+       onClick = onClick,
+       colors = colors,
+       enabled = enabled
+   )
+
+}
+
+@Composable
+fun PlayerTeamLabel(text: String) {
+    Text(
+        modifier = Modifier.fillMaxWidth(),
+        textAlign = TextAlign.Center,
+        style = MaterialTheme.typography.body1,
+        text = text
+    )
+}
+
+@Composable
+fun PlayerScoreLabel(text: String) {
+    Text(
+        textAlign = TextAlign.Center,
+        style = MaterialTheme.typography.display2,
+        text = text
+    )
+}
+
+@Composable
+fun OutlineAddButton(onClick: () -> Unit, enabled: Boolean) {
+    OutlinedButton(
+        modifier = Modifier.size(ButtonDefaults.SmallButtonSize),
+        onClick = onClick,
+        enabled = enabled
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Add,
+            contentDescription = stringResource(id = R.string.content_description_add),
+        )
+    }
+}
+
+@Composable
+fun OutlineSubtractButton(onClick: () -> Unit, enabled: Boolean) {
+    OutlinedButton(
+        modifier = Modifier.size(ButtonDefaults.SmallButtonSize),
+        onClick = onClick,
+        enabled = enabled
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Remove,
+            contentDescription = stringResource(id = R.string.content_description_add),
+        )
+    }
+}
+
+@Composable
 fun AddButton(onClick: () -> Unit, enabled: Boolean) {
     AceButton(
         boxScope = {
@@ -71,6 +147,7 @@ fun AddButton(onClick: () -> Unit, enabled: Boolean) {
          )
         },
         modifier = addSubButtonModifier,
+        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.background),
         onClick = onClick,
         enabled = enabled
     )
@@ -86,6 +163,7 @@ fun SubtractButton(onClick: () -> Unit, enabled: Boolean) {
             )
         },
         modifier = addSubButtonModifier,
+        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.background),
         onClick = onClick,
         enabled = enabled
     )

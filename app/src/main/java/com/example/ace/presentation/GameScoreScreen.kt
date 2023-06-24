@@ -3,15 +3,17 @@ package com.example.ace.presentation
 import android.util.Log
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.scrollBy
-import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Arrangement.Absolute.Center
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.SportsTennis
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -21,36 +23,47 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.rotary.onRotaryScrollEvent
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import androidx.wear.compose.foundation.CurvedTextStyle
-import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
+import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.PositionIndicator
 import androidx.wear.compose.material.Scaffold
-import androidx.wear.compose.material.ScalingLazyColumn
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
 import androidx.wear.compose.material.TimeTextDefaults
-import androidx.wear.compose.material.Vignette
-import androidx.wear.compose.material.VignettePosition
 import androidx.wear.compose.material.curvedText
 import androidx.wear.compose.material.rememberScalingLazyListState
+import androidx.wear.compose.material.scrollAway
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
+import com.example.ace.R
 import kotlinx.coroutines.launch
 
-//@OptIn(ExperimentalComposeUiApi::class)
+/*
+    **NOTE**
+
+    The actual game score is tracked as states (Int). States map to scores (String).
+
+    // State -> Score
+    // 0 -> 00
+    // 1 -> 15
+    // 2 -> 30
+    // 3 -> 40
+    // 4 -> AD
+    // 5 -> !! (Win)
+
+ */
+
 @Composable
 fun GameScoreScreen (navController: NavController, totalGames: Int) {
     val leadingTextStyle = TimeTextDefaults.timeTextStyle(color = MaterialTheme.colors.primary)
@@ -61,51 +74,40 @@ fun GameScoreScreen (navController: NavController, totalGames: Int) {
         mutableStateOf(1)
     }
 
-    var p1Score = remember {
+
+    var p1State = remember {
         mutableStateOf(0)
     }
 
-    var p2Score = remember {
+    var p2State = remember {
         mutableStateOf(0)
     }
 
-    var p1GameScoreString = remember {
-        mutableStateOf("00")
-    }
-    var p2GameScoreString = remember {
-        mutableStateOf("00")
-    }
 
-    // P1 string will update to show the games won
-    var p1String by remember {
-        mutableStateOf("P1")
-    }
-
-    // P2 string will update to show the games won
-    var p2String by remember {
-        mutableStateOf("P2")
-    }
+    var p1WinCounter = 0
+    var p2WinCounter = 0
 
     var winState: Int
 
     // Use Scaffold to get a curved text time at the top, a vignette, and a scrolling indicator
     Scaffold(
         timeText = { TimeText(
+            modifier = Modifier.scrollAway(listState),
             startLinearContent = {
                 Text(
-                    text = "Game $currGame of $totalGames",
+                    text = "G: $currGame/$totalGames",
                     style = leadingTextStyle
                 )
             },
             startCurvedContent = {
                 curvedText(
-                    text = "Game $currGame of $totalGames",
+                    text = "G: $currGame/$totalGames",
                     style = CurvedTextStyle(leadingTextStyle)
                 )
             },
         ) },
 
-        vignette = { Vignette(vignettePosition = VignettePosition.TopAndBottom) },
+//        vignette = { Vignette(vignettePosition = VignettePosition.TopAndBottom) },
         positionIndicator = {
             PositionIndicator(
                 scalingLazyListState = listState
@@ -116,9 +118,9 @@ fun GameScoreScreen (navController: NavController, totalGames: Int) {
         val focusRequester = remember { FocusRequester() }
         val coroutingScope = rememberCoroutineScope()
 
+
         // Use ScalingLazyColumn to create a scrollable list of items that scale based on their position
-//        Column(
-        ScalingLazyColumn(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .onRotaryScrollEvent {
@@ -131,95 +133,102 @@ fun GameScoreScreen (navController: NavController, totalGames: Int) {
                 .focusable()
             ,
 //            verticalArrangement = Arrangement.Center
-            state = listState
+//            state = listState
         ) {
+            item(key = 0) {
 
+                    Column(
+                        modifier = Modifier
+                            .fillParentMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        Column() {
+                            PlayerTeamLabel(text = stringResource(R.string.player_one))
+                            ScoreRow(p1State = p1State, p2State = p2State, mainState = p1State)
+                        }
 
-            item {
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    text = p1String,
-                    style = MaterialTheme.typography.title3
-                )
-            }
+                        Spacer(Modifier.size(12.dp))
 
-            item {
-                ScoreRow(score = p1Score, scoreString = p1GameScoreString)
-            }
+                        Column() {
+                            ScoreRow(p1State = p1State, p2State = p2State, mainState = p2State)
+                            PlayerTeamLabel(text = stringResource(R.string.player_two))
+                        }
 
-            item {
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    text = p2String,
-                    style = MaterialTheme.typography.title3
-                )
-            }
+                    }
+                }
 
             item {
-                ScoreRow(score = p2Score, scoreString = p2GameScoreString)
-            }
 
-            item {
-                Row() {
+                Column(
+                    modifier = Modifier.fillParentMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    Box(
+                        modifier = Modifier.size(ButtonDefaults.LargeIconSize)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.SportsTennis,
+                            contentDescription = "Casual set stats icon",
+                            modifier = Modifier.size(ButtonDefaults.LargeIconSize)
+                        )
+                    }
+
+                    // Show set stats here
+                    Text(
+                        text = "Casual set stats",
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.title2
+                    )
+                    Text(
+                        text = "P1 won $p1WinCounter game(s).",
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "P2 won $p2WinCounter game(s).",
+                        textAlign = TextAlign.Center
+                    )
+
+
+
+                }
+
+                Row(
+                    modifier = Modifier.fillParentMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
 
                     // Do not show the stop button if you are already at last game
                     if (currGame != totalGames) {
                         StopButton(
                             onClick = {
-                                winState = if (p1String.length == p2String.length) {
-                                    0
-                                } else if (p1String.length > p2String.length) {
-                                    1
-                                } else if (p1String.length < p2String.length) {
-                                    2
-                                } else {
-                                    3
-                                }
+
+                                winState = calculateWinner(p1WinCounter, p2WinCounter)
 
                                 navController.navigate("GameCompleteScreen/$winState")
+
                             })
                     }
 
                     NextButton(
                         onClick = {
-                            Log.i("Curr game scores: ", "P1: ${p1Score.value} | P2: ${p2Score.value}")
+//                            Log.i("Curr game scores: ", "P1: ${p1State.value} | P2: ${p2State.value}")
 
                             if (currGame <= totalGames) {
 
-                                if (p1Score.value > p2Score.value) {
-                                    p1String += if (p1String == "P1") {
-                                        " | $currGame"
-                                    } else {
-                                        ", $currGame"
-                                    }
-                                } else {
-                                    p2String += if (p2String == "P2") {
-                                        " | $currGame"
-                                    } else {
-                                        ", $currGame"
-                                    }
-                                }
-
+                                // Update win counter
+                                if (p1State.value > p2State.value) p1WinCounter++ else p2WinCounter++
 
                                 // Reset the game to track the new game
-                                p1Score.value = 0
-                                p2Score.value = 0
-                                p1GameScoreString.value = "00"
-                                p2GameScoreString.value = "00"
+                                p1State.value = 0
+                                p2State.value = 0
+
 
                                 if (currGame == totalGames) {
 
-                                    winState = if (p1String.length == p2String.length) {
-                                        0
-                                    } else if (p1String.length > p2String.length) {
-                                        1
-                                    } else if (p1String.length < p2String.length) {
-                                        2
-                                    } else {
-                                        3
-                                    }
+                                    winState = calculateWinner(p1WinCounter, p2WinCounter)
 
                                     navController.navigate("GameCompleteScreen/$winState")
                                 }
@@ -227,11 +236,12 @@ fun GameScoreScreen (navController: NavController, totalGames: Int) {
                                 currGame++
                             }
                         },
-                        enabled = p1Score.value != p2Score.value
+                        enabled = p1State.value != p2State.value
                     )
 
                 }
             }
+
         }
 
         LaunchedEffect(Unit) { focusRequester.requestFocus() }
@@ -239,50 +249,111 @@ fun GameScoreScreen (navController: NavController, totalGames: Int) {
     }
 }
 
+fun calculateWinner(p1Score: Int, p2Score: Int): Int {
+
+    return if (p1Score == p2Score) {
+        0
+    } else if (p1Score > p2Score) {
+        1
+    } else if (p1Score < p2Score) {
+        2
+    } else {
+        3
+    }
+
+}
+
 
 // A composable that represents a row of score components
 @Composable
-fun ScoreRow(score: MutableState<Int>, scoreString: MutableState<String>) {
+fun ScoreRow(
+    p1State: MutableState<Int>,
+    p2State: MutableState<Int>,
+    mainState: MutableState<Int>,
+) {
 
     Row(
         modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
 
-        SubtractButton(
+        OutlineSubtractButton(
             onClick = {
-                score.value--
-                scoreString.value = computeScore(score.value)
+
+                mainState.value--
+                Log.i("p1Score", "${p1State.value}")
+                Log.i("p2Score", "${p2State.value}")
+
             },
-            enabled = score.value > 0
+            enabled = (mainState.value > 0)
         )
 
-        Text(
-            modifier = Modifier.align(Alignment.CenterVertically),
-            text = scoreString.value,
-            style = MaterialTheme.typography.display3,
-        )
+        PlayerScoreLabel(text = translateScore(p1Score = p1State.value, p2Score = p2State.value, mainScore = mainState.value))
 
-        AddButton(
+        OutlineAddButton(
             onClick = {
-                score.value++
-                scoreString.value = computeScore(score.value)
+
+                // P1 score is AD and P2 score is 40
+                if (p1State.value == 4 && p2State.value == 3) {
+                    // P1 score is AD and the score called to update is P1's
+                    if (p1State.value == 4 && mainState.value == 4) {
+                        // P1 wins
+                        mainState.value = 5
+                    } else {
+                        // Otherwise, P1 is back to deuce
+                        p1State.value = 3
+                    }
+
+                // P2 score is AD and P1 score is 40
+                } else if (p2State.value == 4 && p1State.value == 3) {
+                    // P2 score is AD and the score called to update is P2's
+                    if (p2State.value == 4 && mainState.value == 4) {
+                        // P2 wins
+                        mainState.value = 5
+                    } else {
+                        // Otherwise, P2 is back to deuce
+                        p2State.value = 3
+                    }
+                // Otherwise, update specified score
+                } else {
+                    mainState.value++
+                }
+
+//                Log.i("p1Score", "${p1State.value}")
+//                Log.i("p2Score", "${p2State.value}")
+
             },
-            enabled = score.value < 5
+            enabled = mainState.value < 5 && translateScore(p1Score = p1State.value, p2Score = p2State.value, mainScore = mainState.value) != "!!"
         )
 
     }
 }
 
-fun computeScore(score: Int): String {
 
-    Log.i("score", "$score")
-    return when (score) {
+fun translateScore(p1Score: Int, p2Score: Int, mainScore: Int): String {
+
+    // State -> Score
+    // 0 -> 00
+    // 1 -> 15
+    // 2 -> 30
+    // 3 -> 40
+    // 4 -> AD
+    // 5 -> !!
+
+    return when (mainScore) {
         0 -> "00"
         1 -> "15"
         2 -> "30"
         3 -> "40"
-        4 -> "AD"
+        4 -> {
+            // Only enter AD iff other player's score is 40
+            if ((p1Score == 4 && p2Score == 3) || (p2Score == 4 && p1Score == 3)) {
+                "AD"
+            } else {
+                "!!"
+            }
+        }
         5 -> "!!"
         else -> {
             "NA"
@@ -291,7 +362,7 @@ fun computeScore(score: Int): String {
 
 }
 
-@Preview(device = Devices.WEAR_OS_LARGE_ROUND, showSystemUi = true)
+@Preview(device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
 fun GameScoreScreenPreview() {
     GameScoreScreen(navController = rememberSwipeDismissableNavController(), totalGames = 7)

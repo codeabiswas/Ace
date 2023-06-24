@@ -25,7 +25,7 @@ val Jasper = Color (0xFFDB504A)
 
 internal val wearColorPalette: Colors = Colors(
     primary = Lime,
-    primaryVariant = Purple700,
+    primaryVariant = BritishRacingGreen,
     secondary = SeaGreen,
     secondaryVariant = Teal200,
     error = Jasper,
